@@ -1,0 +1,34 @@
+From 07fecbb815c56633bea32bb8785f68b8213e62b5 Mon Sep 17 00:00:00 2001
+From: ManshuTyagi <himanshut567@gmail.com>
+Date: Sun, 22 Dec 2024 09:53:05 +0000
+Subject: [PATCH] [TMP]peridot: Fix for calling number issue
+
+On few operators,especially in Jio, numbers show up in <caller number>&<own number> which causes daily inconveniences
+Thus split the caller number based on delimiters
+
+Change-Id: I310fe920ca5224b19fdeb78290040400ad1dbe89
+---
+ .../services/telephony/TelephonyConnectionService.java     | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/com/android/services/telephony/TelephonyConnectionService.java b/src/com/android/services/telephony/TelephonyConnectionService.java
+index 148cff3..b77e1d1 100644
+--- a/src/com/android/services/telephony/TelephonyConnectionService.java
++++ b/src/com/android/services/telephony/TelephonyConnectionService.java
+@@ -1755,6 +1755,13 @@ public class TelephonyConnectionService extends ConnectionService {
+ 
+             Uri address = extras.getParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS);
+             if (address != null) {
++		String fullNumber = address.getSchemeSpecificPart();  // Extract the full phone number
++   	        if (fullNumber != null && fullNumber.contains("&")) {
++        		String[] parts = fullNumber.split("&");
++        		String callerNumber = parts[0];  // Get the part of the number before '&'
++			address = Uri.fromParts("tel", callerNumber, null);
++		}
++
+                 Log.i(this, "onCreateIncomingConnection. Set caller id info.");
+                 connection.setAddress(address, TelecomManager.PRESENTATION_ALLOWED);
+             }
+-- 
+2.34.1
+
